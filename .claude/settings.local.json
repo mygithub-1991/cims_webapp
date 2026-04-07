@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm start:*)",
+      "Bash(curl -s http://localhost:8000/api/students)",
+      "Bash(curl:*)",
+      "Bash(python -m json.tool)",
+      "Bash(chmod +x populate_data.sh)",
+      "Bash(bash populate_data.sh)",
+      "Bash(chmod +x populate_correct_data.sh)",
+      "Bash(bash populate_correct_data.sh)",
+      "Bash(python -c \"import sys, json; data = json.load\\(sys.stdin\\); print\\(f'Total students: {len\\(data\\)}'\\); print\\('Sample:', data[0]['name'] if data else 'No data'\\)\")",
+      "Bash(python -c \"import sys, json; data = json.load\\(sys.stdin\\); print\\(f'Total fee records: {len\\(data\\)}'\\); total = sum\\(r['amount'] for r in data\\); print\\(f'Total revenue: ₹{total}'\\)\")",
+      "Bash(python -c \"import sys, json; data = json.load\\(sys.stdin\\); print\\(f'Total expenses: {len\\(data\\)}'\\); total = sum\\(e['amount'] for e in data\\); print\\(f'Total expenses: ₹{total}'\\)\")",
+      "Bash(python -c \"import sys, json; data = json.load\\(sys.stdin\\); print\\(f'Total fee records: {len\\(data\\)}'\\); total = sum\\(r['amount'] for r in data\\); print\\(f'Total revenue: Rs.{total}'\\)\")",
+      "Bash(python -c \"import sys, json; data = json.load\\(sys.stdin\\); print\\(f'Total expenses: {len\\(data\\)}'\\); total = sum\\(e['amount'] for e in data\\); print\\(f'Total amount: Rs.{total}'\\)\")",
+      "Bash(python -c \"import sys, json; data = json.load\\(sys.stdin\\); print\\(f'Total batches: {len\\(data\\)}'\\)\")",
+      "Bash(python -c \"import sys, json; data = json.load\\(sys.stdin\\); print\\(f'Total fee records: {len\\(data\\)}'\\)\")",
+      "Bash(chmod +x add_fee_records.sh)",
+      "Bash(bash add_fee_records.sh)",
+      "Bash(python -c \"import sys, json; data = json.load\\(sys.stdin\\); print\\(f'  Total: {len\\(data\\)}'\\); total = sum\\(e['amount'] for e in data\\); print\\(f'  Total Expenses: Rs.{total}'\\)\")",
+      "Bash(npm run:*)",
+      "Bash(python -c \"import sys, json; data = json.load\\(sys.stdin\\); print\\(f'  Count: {len\\(data\\)}'\\); total = sum\\(e['amount'] for e in data\\); print\\(f'  Total: {total}'\\)\")",
+      "Bash(python -c \"import sys, json; paths = json.load\\(sys.stdin\\)['paths']; print\\('\\\\n'.join\\(sorted\\([p for p in paths.keys\\(\\) if '/api/' in p]\\)\\)\\)\")",
+      "Bash(python -c \"import sys, json; data = json.load\\(sys.stdin\\); print\\(f'  /api/expenses/: {len\\(data\\)} records'\\)\")",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(git checkout:*)",
+      "Bash(git rebase:*)",
+      "Bash(git remote:*)",
+      "Bash(python -c \"import sys, json; paths = json.load\\(sys.stdin\\)['paths']; print\\('\\\\n'.join\\([p for p in paths.keys\\(\\) if 'school' in p.lower\\(\\)]\\)\\)\")",
+      "Bash(python -c \"import sys, json; data = json.load\\(sys.stdin\\); print\\(f'Total schools: {len\\(data\\)}'\\); [print\\(f'  - {s[\\\\\"school_name\\\\\"]} \\(ID: {s[\\\\\"id\\\\\"]}, Created: {s[\\\\\"created_at\\\\\"]}\\)'\\) for s in data[:5]]\")",
+      "Bash(psql -h localhost -U cims_user -d cims_db -c \"SELECT COUNT\\(*\\) FROM schools;\")"
+    ]
+  }
+}

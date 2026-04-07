@@ -21,17 +21,16 @@ export const attendanceService = {
     return await api.get<Attendance>(`${API_ENDPOINTS.ATTENDANCE}/${id}`);
   },
 
-  // Mark attendance (batch)
-  markAttendance: async (data: {
-    batch_id: number;
-    date: number;
-    attendance: Array<{
+  // Mark attendance (bulk)
+  markAttendance: async (
+    attendanceRecords: Array<{
       student_id: number;
-      status: 'present' | 'absent' | 'late';
-      remarks?: string;
-    }>;
-  }): Promise<Attendance[]> => {
-    return await api.post<Attendance[]>(`${API_ENDPOINTS.ATTENDANCE}/batch`, data);
+      date: number;
+      is_present: boolean;
+      device_id?: string;
+    }>
+  ): Promise<Attendance[]> => {
+    return await api.post<Attendance[]>(`${API_ENDPOINTS.ATTENDANCE}/bulk`, attendanceRecords);
   },
 
   // Update attendance

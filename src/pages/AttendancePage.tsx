@@ -38,7 +38,7 @@ const AttendancePage: React.FC = () => {
   );
   const [searchQuery, setSearchQuery] = useState('');
   const [attendanceData, setAttendanceData] = useState<{
-    [key: number]: { status: 'present' | 'absent' | 'late'; remarks: string };
+    [key: number]: { is_present: boolean };
   }>({});
 
   useEffect(() => {
@@ -72,7 +72,7 @@ const AttendancePage: React.FC = () => {
       // Initialize attendance data with default 'present' status
       const initialData: typeof attendanceData = {};
       studentsData.forEach((student) => {
-        initialData[student.id] = { status: 'present', remarks: '' };
+        initialData[student.id] = { is_present: true };
       });
       setAttendanceData(initialData);
     } catch (error) {
@@ -82,17 +82,10 @@ const AttendancePage: React.FC = () => {
     }
   };
 
-  const handleStatusChange = (studentId: number, status: 'present' | 'absent' | 'late') => {
+  const handleStatusChange = (studentId: number, is_present: boolean) => {
     setAttendanceData({
       ...attendanceData,
-      [studentId]: { ...attendanceData[studentId], status },
-    });
-  };
-
-  const handleRemarksChange = (studentId: number, remarks: string) => {
-    setAttendanceData({
-      ...attendanceData,
-      [studentId]: { ...attendanceData[studentId], remarks },
+      [studentId]: { is_present },
     });
   };
 
@@ -104,17 +97,15 @@ const AttendancePage: React.FC = () => {
 
     try {
       setLoading(true);
+      const attendanceDate = getStartOfDay(new Date(selectedDate).getTime());
+
       const attendanceArray = Object.entries(attendanceData).map(([studentId, data]) => ({
         student_id: parseInt(studentId),
-        status: data.status,
-        remarks: data.remarks || undefined,
+        date: attendanceDate,
+        is_present: data.is_present,
       }));
 
-      await attendanceService.markAttendance({
-        batch_id: parseInt(selectedBatch),
-        date: getStartOfDay(new Date(selectedDate).getTime()),
-        attendance: attendanceArray,
-      });
+      await attendanceService.markAttendance(attendanceArray);
 
       alert('Attendance marked successfully!');
       loadStudents();
@@ -128,9 +119,13 @@ const AttendancePage: React.FC = () => {
 
 
   const getSummary = () => {
-    const summary = { present: 0, absent: 0, late: 0 };
+    const summary = { present: 0, absent: 0 };
     Object.values(attendanceData).forEach((data) => {
-      summary[data.status]++;
+      if (data.is_present) {
+        summary.present++;
+      } else {
+        summary.absent++;
+      }
     });
     return summary;
   };
@@ -246,16 +241,6 @@ const AttendancePage: React.FC = () => {
               </CardContent>
             </Card>
           </Box>
-          <Box sx={{ flex: '1 1 200px' }}>
-            <Card sx={{ bgcolor: 'warning.light' }}>
-              <CardContent>
-                <Typography variant="body2" color="text.secondary">
-                  Late
-                </Typography>
-                <Typography variant="h4">{summary.late}</Typography>
-              </CardContent>
-            </Card>
-          </Box>
         </Box>
       )}
 
@@ -273,7 +258,6 @@ const AttendancePage: React.FC = () => {
                   <TableCell>Student Name</TableCell>
                   <TableCell>Batch</TableCell>
                   <TableCell align="center">Status</TableCell>
-                  <TableCell>Remarks</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -289,11 +273,11 @@ const AttendancePage: React.FC = () => {
                     <TableCell>
                       <RadioGroup
                         row
-                        value={attendanceData[student.id]?.status || 'present'}
+                        value={attendanceData[student.id]?.is_present ? 'present' : 'absent'}
                         onChange={(e) =>
                           handleStatusChange(
                             student.id,
-                            e.target.value as 'present' | 'absent' | 'late'
+                            e.target.value === 'present'
                           )
                         }
                       >
@@ -307,21 +291,7 @@ const AttendancePage: React.FC = () => {
                           control={<Radio color="error" />}
                           label="Absent"
                         />
-                        <FormControlLabel
-                          value="late"
-                          control={<Radio color="warning" />}
-                          label="Late"
-                        />
                       </RadioGroup>
-                    </TableCell>
-                    <TableCell>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        placeholder="Add remarks (optional)"
-                        value={attendanceData[student.id]?.remarks || ''}
-                        onChange={(e) => handleRemarksChange(student.id, e.target.value)}
-                      />
                     </TableCell>
                   </TableRow>
                 ))}

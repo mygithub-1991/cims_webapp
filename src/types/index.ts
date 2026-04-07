@@ -93,16 +93,14 @@ export interface Attendance {
   id: number;
   student_id: number;
   student?: Student;
-  batch_id: number;
-  batch?: Batch;
   date: number;
-  status: 'present' | 'absent' | 'late';
-  remarks?: string;
+  is_present: boolean;
   is_deleted: boolean;
   created_at: number;
   deleted_at?: number;
   last_synced_at?: number;
   sync_status?: string;
+  device_id?: string;
 }
 
 // Fee Record Types
