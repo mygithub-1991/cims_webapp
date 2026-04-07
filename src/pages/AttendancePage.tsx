@@ -16,18 +16,17 @@ import {
   Card,
   CardContent,
   Chip,
-  IconButton,
   RadioGroup,
   FormControlLabel,
   Radio,
 } from '@mui/material';
-import { Save, Refresh, CheckCircle, Cancel, AccessTime } from '@mui/icons-material';
+import { Save, Refresh } from '@mui/icons-material';
 import MainLayout from '../components/Layout/MainLayout';
 import { attendanceService } from '../services/attendanceService';
 import { studentService } from '../services/studentService';
 import { batchService } from '../services/batchService';
 import { Batch, Student } from '../types';
-import { formatDate, getStartOfDay } from '../utils/dateUtils';
+import { getStartOfDay } from '../utils/dateUtils';
 
 const AttendancePage: React.FC = () => {
   const [batches, setBatches] = useState<Batch[]>([]);
@@ -49,6 +48,7 @@ const AttendancePage: React.FC = () => {
     if (selectedBatch) {
       loadStudents();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBatch]);
 
   const loadBatches = async () => {
@@ -125,18 +125,6 @@ const AttendancePage: React.FC = () => {
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'present':
-        return <CheckCircle color="success" />;
-      case 'absent':
-        return <Cancel color="error" />;
-      case 'late':
-        return <AccessTime color="warning" />;
-      default:
-        return null;
-    }
-  };
 
   const getSummary = () => {
     const summary = { present: 0, absent: 0, late: 0 };
