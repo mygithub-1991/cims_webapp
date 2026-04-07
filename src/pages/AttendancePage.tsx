@@ -37,6 +37,11 @@ const AttendancePage: React.FC = () => {
     new Date().toISOString().split('T')[0]
   );
   const [searchQuery, setSearchQuery] = useState('');
+  const [attendanceExists, setAttendanceExists] = useState<{
+    exists: boolean;
+    marked_count: number;
+    student_count: number;
+  } | null>(null);
   const [attendanceData, setAttendanceData] = useState<{
     [key: number]: { is_present: boolean };
   }>({});
@@ -69,12 +74,32 @@ const AttendancePage: React.FC = () => {
       });
       setStudents(studentsData);
 
+      // Check if attendance already exists for this batch and date
+      const attendanceDate = getStartOfDay(new Date(selectedDate).getTime());
+      const existsData = await attendanceService.checkExists(
+        parseInt(selectedBatch),
+        attendanceDate
+      );
+      setAttendanceExists(existsData);
+
       // Initialize attendance data with default 'present' status
       const initialData: typeof attendanceData = {};
       studentsData.forEach((student) => {
         initialData[student.id] = { is_present: true };
       });
       setAttendanceData(initialData);
+
+      // Show warning if attendance already exists
+      if (existsData.exists) {
+        const confirmLoad = window.confirm(
+          `Attendance has already been marked for ${existsData.marked_count} out of ${existsData.student_count} students on this date.\n\nDo you want to update it?`
+        );
+        if (!confirmLoad) {
+          setStudents([]);
+          setAttendanceData({});
+          setAttendanceExists(null);
+        }
+      }
     } catch (error) {
       console.error('Failed to load students:', error);
     } finally {
@@ -146,6 +171,15 @@ const AttendancePage: React.FC = () => {
         <Typography variant="body2" color="text.secondary">
           Select batch and date to mark student attendance
         </Typography>
+        {attendanceExists && attendanceExists.exists && (
+          <Box sx={{ mt: 2 }}>
+            <Chip
+              label={`⚠️ Attendance already marked for ${attendanceExists.marked_count}/${attendanceExists.student_count} students. You are updating existing records.`}
+              color="warning"
+              sx={{ fontSize: '0.9rem', py: 2 }}
+            />
+          </Box>
+        )}
       </Box>
 
       {/* Batch and Date Selection */}

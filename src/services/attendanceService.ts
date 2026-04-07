@@ -52,4 +52,15 @@ export const attendanceService = {
   delete: async (id: number): Promise<{ message: string }> => {
     return await api.delete<{ message: string }>(`${API_ENDPOINTS.ATTENDANCE}/${id}`);
   },
+
+  // Check if attendance exists for a batch on a specific date
+  checkExists: async (batchId: number, date: number): Promise<{
+    exists: boolean;
+    student_count: number;
+    marked_count: number;
+    all_marked: boolean;
+    message: string;
+  }> => {
+    return await api.get(`${API_ENDPOINTS.ATTENDANCE}/check-exists/${batchId}/${date}`);
+  },
 };
