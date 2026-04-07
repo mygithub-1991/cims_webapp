@@ -141,6 +141,20 @@ export interface Expense {
   sync_status?: string;
 }
 
+// School Types
+export interface School {
+  id: number;
+  school_name: string;
+  address: string;
+  pincode: string;
+  is_deleted: boolean;
+  deleted_at?: number;
+  created_at: number;
+  updated_at: number;
+  last_synced_at?: number;
+  sync_status?: string;
+}
+
 // Dashboard Stats
 export interface DashboardStats {
   total_students: number;

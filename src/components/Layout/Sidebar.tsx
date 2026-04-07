@@ -24,6 +24,7 @@ import {
   RestoreFromTrash,
   ManageAccounts,
   Logout,
+  AccountBalance,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserRole } from '../../types';
@@ -43,6 +44,7 @@ const menuItems: MenuItem[] = [
   { id: 'students', label: 'Students', icon: <People />, path: '/students' },
   { id: 'teachers', label: 'Teachers', icon: <School />, path: '/teachers', roles: [UserRole.ADMIN] },
   { id: 'batches', label: 'Batches', icon: <Group />, path: '/batches' },
+  { id: 'schools', label: 'Schools', icon: <AccountBalance />, path: '/schools', roles: [UserRole.ADMIN] },
   { id: 'attendance', label: 'Attendance', icon: <CheckCircle />, path: '/attendance' },
   { id: 'fees', label: 'Fees', icon: <AttachMoney />, path: '/fees' },
   { id: 'expenses', label: 'Expenses', icon: <Receipt />, path: '/expenses', roles: [UserRole.ADMIN, UserRole.ACCOUNTANT] },

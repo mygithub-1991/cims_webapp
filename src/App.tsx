@@ -13,6 +13,7 @@ import FeesPage from './pages/FeesPage';
 import ExpensesPage from './pages/ExpensesPage';
 import ReportsPage from './pages/ReportsPage';
 import UsersPage from './pages/UsersPage';
+import SchoolsPage from './pages/SchoolsPage';
 import { UserRole } from './types';
 
 // Create Material-UI theme
@@ -121,6 +122,15 @@ function App() {
               element={
                 <PrivateRoute requiredRoles={[UserRole.ADMIN]}>
                   <UsersPage />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/schools"
+              element={
+                <PrivateRoute requiredRoles={[UserRole.ADMIN]}>
+                  <SchoolsPage />
                 </PrivateRoute>
               }
             />
