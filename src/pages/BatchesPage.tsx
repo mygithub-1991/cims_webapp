@@ -32,6 +32,7 @@ const BatchesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingBatch, setEditingBatch] = useState<Batch | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -129,6 +130,14 @@ const BatchesPage: React.FC = () => {
     return teacher?.name || '-';
   };
 
+  const filteredBatches = batches.filter((batch) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      batch.name.toLowerCase().includes(query) ||
+      (batch.time && batch.time.toLowerCase().includes(query))
+    );
+  });
+
   if (loading) {
     return (
       <MainLayout>
@@ -169,6 +178,17 @@ const BatchesPage: React.FC = () => {
         </Box>
       </Box>
 
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          fullWidth
+          placeholder="Search batches by name or time..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          variant="outlined"
+          size="small"
+        />
+      </Box>
+
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -180,7 +200,7 @@ const BatchesPage: React.FC = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {batches.map((batch) => (
+            {filteredBatches.map((batch) => (
               <TableRow key={batch.id}>
                 <TableCell>
                   <Chip label={batch.name} color="primary" />

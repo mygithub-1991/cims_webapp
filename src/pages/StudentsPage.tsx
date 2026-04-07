@@ -34,6 +34,7 @@ const StudentsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -141,6 +142,16 @@ const StudentsPage: React.FC = () => {
     return student.total_fees - student.paid_fees;
   };
 
+  const filteredStudents = students.filter((student) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      student.name.toLowerCase().includes(query) ||
+      student.roll_number.toLowerCase().includes(query) ||
+      (student.contact_number && student.contact_number.toLowerCase().includes(query)) ||
+      (student.parent_name && student.parent_name.toLowerCase().includes(query))
+    );
+  });
+
   if (loading) {
     return (
       <MainLayout>
@@ -181,6 +192,17 @@ const StudentsPage: React.FC = () => {
         </Box>
       </Box>
 
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          fullWidth
+          placeholder="Search students by name, roll number, contact, or parent name..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          variant="outlined"
+          size="small"
+        />
+      </Box>
+
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -197,7 +219,7 @@ const StudentsPage: React.FC = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {students.map((student) => (
+            {filteredStudents.map((student) => (
               <TableRow key={student.id}>
                 <TableCell>{student.name}</TableCell>
                 <TableCell>

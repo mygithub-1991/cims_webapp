@@ -34,6 +34,7 @@ const FeesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingFee, setEditingFee] = useState<FeeRecord | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState({
     student_id: '',
     amount_paid: '',
@@ -133,6 +134,15 @@ const FeesPage: React.FC = () => {
     return student?.name || 'Unknown';
   };
 
+  const filteredFees = fees.filter((fee) => {
+    const query = searchQuery.toLowerCase();
+    const studentName = getStudentName(fee.student_id).toLowerCase();
+    return (
+      studentName.includes(query) ||
+      (fee.receipt_id && fee.receipt_id.toLowerCase().includes(query))
+    );
+  });
+
   if (loading) {
     return (
       <MainLayout>
@@ -173,6 +183,17 @@ const FeesPage: React.FC = () => {
         </Box>
       </Box>
 
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          fullWidth
+          placeholder="Search fee records by student name or receipt ID..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          variant="outlined"
+          size="small"
+        />
+      </Box>
+
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -187,7 +208,7 @@ const FeesPage: React.FC = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {fees.map((fee) => (
+            {filteredFees.map((fee) => (
               <TableRow key={fee.id}>
                 <TableCell>
                   <Chip label={fee.receipt_id || `#${fee.id}`} size="small" />

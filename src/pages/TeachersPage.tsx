@@ -31,6 +31,7 @@ const TeachersPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     contact_number: '',
@@ -114,6 +115,15 @@ const TeachersPage: React.FC = () => {
     }
   };
 
+  const filteredTeachers = teachers.filter((teacher) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      teacher.name.toLowerCase().includes(query) ||
+      (teacher.subject && teacher.subject.toLowerCase().includes(query)) ||
+      (teacher.contact_number && teacher.contact_number.toLowerCase().includes(query))
+    );
+  });
+
   if (loading) {
     return (
       <MainLayout>
@@ -154,6 +164,17 @@ const TeachersPage: React.FC = () => {
         </Box>
       </Box>
 
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          fullWidth
+          placeholder="Search teachers by name, subject, or contact number..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          variant="outlined"
+          size="small"
+        />
+      </Box>
+
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -167,7 +188,7 @@ const TeachersPage: React.FC = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {teachers.map((teacher) => (
+            {filteredTeachers.map((teacher) => (
               <TableRow key={teacher.id}>
                 <TableCell>{teacher.name}</TableCell>
                 <TableCell>

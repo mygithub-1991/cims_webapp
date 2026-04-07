@@ -36,6 +36,7 @@ const AttendancePage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split('T')[0]
   );
+  const [searchQuery, setSearchQuery] = useState('');
   const [attendanceData, setAttendanceData] = useState<{
     [key: number]: { status: 'present' | 'absent' | 'late'; remarks: string };
   }>({});
@@ -134,6 +135,11 @@ const AttendancePage: React.FC = () => {
     return summary;
   };
 
+  const filteredStudents = students.filter((student) => {
+    const query = searchQuery.toLowerCase();
+    return student.name.toLowerCase().includes(query);
+  });
+
   const summary = getSummary();
 
   return (
@@ -192,6 +198,20 @@ const AttendancePage: React.FC = () => {
           </Box>
         </CardContent>
       </Card>
+
+      {/* Search Box */}
+      {students.length > 0 && (
+        <Box sx={{ mb: 2 }}>
+          <TextField
+            fullWidth
+            placeholder="Search students by name..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            variant="outlined"
+            size="small"
+          />
+        </Box>
+      )}
 
       {/* Summary Cards */}
       {students.length > 0 && (
@@ -257,7 +277,7 @@ const AttendancePage: React.FC = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {students.map((student) => (
+                {filteredStudents.map((student) => (
                   <TableRow key={student.id}>
                     <TableCell>{student.name}</TableCell>
                     <TableCell>

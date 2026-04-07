@@ -45,6 +45,7 @@ const ExpensesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState({
     vendor_name: '',
     description: '',
@@ -155,6 +156,15 @@ const ExpensesPage: React.FC = () => {
     return colors[category || ''] || 'default';
   };
 
+  const filteredExpenses = expenses.filter((expense) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      (expense.vendor_name && expense.vendor_name.toLowerCase().includes(query)) ||
+      (expense.category && expense.category.toLowerCase().includes(query)) ||
+      (expense.description && expense.description.toLowerCase().includes(query))
+    );
+  });
+
   if (loading) {
     return (
       <MainLayout>
@@ -195,6 +205,17 @@ const ExpensesPage: React.FC = () => {
         </Box>
       </Box>
 
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          fullWidth
+          placeholder="Search expenses by vendor name, category, or description..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          variant="outlined"
+          size="small"
+        />
+      </Box>
+
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -211,7 +232,7 @@ const ExpensesPage: React.FC = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {expenses.map((expense) => (
+            {filteredExpenses.map((expense) => (
               <TableRow key={expense.id}>
                 <TableCell>
                   <Typography fontWeight="medium">{expense.vendor_name || '-'}</Typography>
