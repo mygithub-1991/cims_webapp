@@ -23,7 +23,17 @@ export const batchService = {
     return await api.put<Batch>(`${API_ENDPOINTS.BATCHES}/${id}`, data);
   },
 
-  // Delete batch (soft delete)
+  // Soft delete batch
+  softDelete: async (id: number): Promise<{ message: string }> => {
+    return await api.delete<{ message: string }>(`${API_ENDPOINTS.BATCHES}/${id}?soft=true`);
+  },
+
+  // Hard delete batch (permanent)
+  hardDelete: async (id: number): Promise<{ message: string }> => {
+    return await api.delete<{ message: string }>(`${API_ENDPOINTS.BATCHES}/${id}?soft=false`);
+  },
+
+  // Legacy method (defaults to soft delete)
   delete: async (id: number): Promise<{ message: string }> => {
     return await api.delete<{ message: string }>(`${API_ENDPOINTS.BATCHES}/${id}`);
   },

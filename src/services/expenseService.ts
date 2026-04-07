@@ -29,7 +29,17 @@ export const expenseService = {
     return await api.put<Expense>(`${API_ENDPOINTS.EXPENSES}/${id}`, data);
   },
 
-  // Delete expense (soft delete)
+  // Soft delete expense
+  softDelete: async (id: number): Promise<{ message: string }> => {
+    return await api.delete<{ message: string }>(`${API_ENDPOINTS.EXPENSES}/${id}?soft=true`);
+  },
+
+  // Hard delete expense (permanent)
+  hardDelete: async (id: number): Promise<{ message: string }> => {
+    return await api.delete<{ message: string }>(`${API_ENDPOINTS.EXPENSES}/${id}?soft=false`);
+  },
+
+  // Legacy method (defaults to soft delete)
   delete: async (id: number): Promise<{ message: string }> => {
     return await api.delete<{ message: string }>(`${API_ENDPOINTS.EXPENSES}/${id}`);
   },

@@ -17,8 +17,10 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  DialogContentText,
+  Chip,
 } from '@mui/material';
-import { Add, Edit, Delete, Refresh } from '@mui/icons-material';
+import { Add, Edit, Delete, Refresh, Visibility, DeleteForever } from '@mui/icons-material';
 import MainLayout from '../components/Layout/MainLayout';
 import { schoolService } from '../services/schoolService';
 import { School } from '../types';
@@ -28,7 +30,12 @@ const SchoolsPage: React.FC = () => {
   const [schools, setSchools] = useState<School[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingSchool, setEditingSchool] = useState<School | null>(null);
+  const [viewingSchool, setViewingSchool] = useState<School | null>(null);
+  const [deletingSchool, setDeletingSchool] = useState<School | null>(null);
+  const [deleteType, setDeleteType] = useState<'soft' | 'hard'>('soft');
   const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState({
     school_name: '',
@@ -91,14 +98,40 @@ const SchoolsPage: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this school?')) {
-      try {
-        await schoolService.delete(id);
-        loadData();
-      } catch (error) {
-        console.error('Failed to delete school:', error);
+  const handleOpenViewDialog = (school: School) => {
+    setViewingSchool(school);
+    setViewDialogOpen(true);
+  };
+
+  const handleCloseViewDialog = () => {
+    setViewDialogOpen(false);
+    setViewingSchool(null);
+  };
+
+  const handleOpenDeleteDialog = (school: School, type: 'soft' | 'hard') => {
+    setDeletingSchool(school);
+    setDeleteType(type);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setDeletingSchool(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingSchool) return;
+
+    try {
+      if (deleteType === 'soft') {
+        await schoolService.softDelete(deletingSchool.id);
+      } else {
+        await schoolService.hardDelete(deletingSchool.id);
       }
+      handleCloseDeleteDialog();
+      loadData();
+    } catch (error) {
+      console.error('Failed to delete school:', error);
     }
   };
 
@@ -185,11 +218,35 @@ const SchoolsPage: React.FC = () => {
                 <TableCell>{school.pincode}</TableCell>
                 <TableCell>{formatDate(school.created_at)}</TableCell>
                 <TableCell align="right">
-                  <IconButton size="small" onClick={() => handleOpenDialog(school)}>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleOpenViewDialog(school)}
+                    title="View Details"
+                  >
+                    <Visibility />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleOpenDialog(school)}
+                    title="Edit"
+                  >
                     <Edit />
                   </IconButton>
-                  <IconButton size="small" onClick={() => handleDelete(school.id)}>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleOpenDeleteDialog(school, 'soft')}
+                    title="Soft Delete"
+                    color="warning"
+                  >
                     <Delete />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleOpenDeleteDialog(school, 'hard')}
+                    title="Permanent Delete"
+                    color="error"
+                  >
+                    <DeleteForever />
                   </IconButton>
                 </TableCell>
               </TableRow>
@@ -242,6 +299,97 @@ const SchoolsPage: React.FC = () => {
           <Button onClick={handleCloseDialog}>Cancel</Button>
           <Button onClick={handleSubmit} variant="contained">
             {editingSchool ? 'Update' : 'Add'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* View Dialog */}
+      <Dialog open={viewDialogOpen} onClose={handleCloseViewDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>School Details</DialogTitle>
+        <DialogContent>
+          {viewingSchool && (
+            <Box sx={{ pt: 2 }}>
+              <Typography variant="subtitle2" color="text.secondary">ID</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>{viewingSchool.id}</Typography>
+
+              <Typography variant="subtitle2" color="text.secondary">school_name</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>{viewingSchool.school_name}</Typography>
+
+              <Typography variant="subtitle2" color="text.secondary">address</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>{viewingSchool.address}</Typography>
+
+              <Typography variant="subtitle2" color="text.secondary">pincode</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>{viewingSchool.pincode}</Typography>
+
+              <Typography variant="subtitle2" color="text.secondary">is_deleted</Typography>
+              <Chip
+                label={viewingSchool.is_deleted ? 'true' : 'false'}
+                color={viewingSchool.is_deleted ? 'error' : 'success'}
+                size="small"
+                sx={{ mb: 2 }}
+              />
+
+              <Typography variant="subtitle2" color="text.secondary">deleted_at</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                {viewingSchool.deleted_at ? formatDate(viewingSchool.deleted_at) : 'null'}
+              </Typography>
+
+              <Typography variant="subtitle2" color="text.secondary">created_at</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>{formatDate(viewingSchool.created_at)}</Typography>
+
+              <Typography variant="subtitle2" color="text.secondary">updated_at</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>{formatDate(viewingSchool.updated_at)}</Typography>
+
+              <Typography variant="subtitle2" color="text.secondary">last_synced_at</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                {viewingSchool.last_synced_at ? formatDate(viewingSchool.last_synced_at) : 'null'}
+              </Typography>
+
+              <Typography variant="subtitle2" color="text.secondary">sync_status</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>{viewingSchool.sync_status || 'null'}</Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseViewDialog}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog}>
+        <DialogTitle>
+          {deleteType === 'soft' ? 'Confirm Soft Delete' : 'Confirm Permanent Delete'}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {deleteType === 'soft' ? (
+              <>
+                Are you sure you want to soft delete <strong>{deletingSchool?.school_name}</strong>?
+                <br />
+                <br />
+                This will mark the school as deleted but can be restored later.
+              </>
+            ) : (
+              <>
+                <strong style={{ color: 'red' }}>WARNING: This action cannot be undone!</strong>
+                <br />
+                <br />
+                Are you sure you want to permanently delete <strong>{deletingSchool?.school_name}</strong>?
+                <br />
+                <br />
+                All data will be permanently removed from the database.
+              </>
+            )}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDeleteDialog}>Cancel</Button>
+          <Button
+            onClick={handleConfirmDelete}
+            color={deleteType === 'soft' ? 'warning' : 'error'}
+            variant="contained"
+          >
+            {deleteType === 'soft' ? 'Soft Delete' : 'Permanently Delete'}
           </Button>
         </DialogActions>
       </Dialog>

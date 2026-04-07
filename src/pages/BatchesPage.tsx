@@ -19,19 +19,26 @@ import {
   DialogActions,
   TextField,
   MenuItem,
+  DialogContentText,
 } from '@mui/material';
-import { Add, Edit, Delete, Refresh } from '@mui/icons-material';
+import { Add, Edit, Delete, Refresh, Visibility, DeleteForever } from '@mui/icons-material';
 import MainLayout from '../components/Layout/MainLayout';
 import { batchService } from '../services/batchService';
 import { teacherService } from '../services/teacherService';
 import { Batch, Teacher } from '../types';
+import { formatDate } from '../utils/dateUtils';
 
 const BatchesPage: React.FC = () => {
   const [batches, setBatches] = useState<Batch[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingBatch, setEditingBatch] = useState<Batch | null>(null);
+  const [viewingBatch, setViewingBatch] = useState<Batch | null>(null);
+  const [deletingBatch, setDeletingBatch] = useState<Batch | null>(null);
+  const [deleteType, setDeleteType] = useState<'soft' | 'hard'>('soft');
   const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState({
     name: '',
@@ -113,14 +120,40 @@ const BatchesPage: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this batch?')) {
-      try {
-        await batchService.delete(id);
-        loadData();
-      } catch (error) {
-        console.error('Failed to delete batch:', error);
+  const handleOpenViewDialog = (batch: Batch) => {
+    setViewingBatch(batch);
+    setViewDialogOpen(true);
+  };
+
+  const handleCloseViewDialog = () => {
+    setViewDialogOpen(false);
+    setViewingBatch(null);
+  };
+
+  const handleOpenDeleteDialog = (batch: Batch, type: 'soft' | 'hard') => {
+    setDeletingBatch(batch);
+    setDeleteType(type);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setDeletingBatch(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingBatch) return;
+
+    try {
+      if (deleteType === 'soft') {
+        await batchService.softDelete(deletingBatch.id);
+      } else {
+        await batchService.hardDelete(deletingBatch.id);
       }
+      handleCloseDeleteDialog();
+      loadData();
+    } catch (error) {
+      console.error('Failed to delete batch:', error);
     }
   };
 
@@ -208,11 +241,17 @@ const BatchesPage: React.FC = () => {
                 <TableCell>{getTeacherName(batch.teacher_id)}</TableCell>
                 <TableCell>{batch.time || '-'}</TableCell>
                 <TableCell align="right">
-                  <IconButton size="small" onClick={() => handleOpenDialog(batch)}>
+                  <IconButton size="small" onClick={() => handleOpenViewDialog(batch)} title="View Details">
+                    <Visibility />
+                  </IconButton>
+                  <IconButton size="small" onClick={() => handleOpenDialog(batch)} title="Edit">
                     <Edit />
                   </IconButton>
-                  <IconButton size="small" onClick={() => handleDelete(batch.id)}>
+                  <IconButton size="small" onClick={() => handleOpenDeleteDialog(batch, 'soft')} title="Soft Delete" color="warning">
                     <Delete />
+                  </IconButton>
+                  <IconButton size="small" onClick={() => handleOpenDeleteDialog(batch, 'hard')} title="Permanent Delete" color="error">
+                    <DeleteForever />
                   </IconButton>
                 </TableCell>
               </TableRow>
@@ -261,6 +300,100 @@ const BatchesPage: React.FC = () => {
           <Button onClick={handleCloseDialog}>Cancel</Button>
           <Button onClick={handleSubmit} variant="contained">
             {editingBatch ? 'Update' : 'Add'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* View Dialog */}
+      <Dialog open={viewDialogOpen} onClose={handleCloseViewDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>Batch Details</DialogTitle>
+        <DialogContent>
+          {viewingBatch && (
+            <Box sx={{ pt: 2 }}>
+              <Typography variant="subtitle2" color="text.secondary">id</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>{viewingBatch.id}</Typography>
+
+              <Typography variant="subtitle2" color="text.secondary">name</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>{viewingBatch.name}</Typography>
+
+              <Typography variant="subtitle2" color="text.secondary">time</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>{viewingBatch.time || 'null'}</Typography>
+
+              <Typography variant="subtitle2" color="text.secondary">teacher_id</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                {viewingBatch.teacher_id ? `${viewingBatch.teacher_id} (${getTeacherName(viewingBatch.teacher_id)})` : 'null'}
+              </Typography>
+
+              <Typography variant="subtitle2" color="text.secondary">is_deleted</Typography>
+              <Box sx={{ mb: 2 }}>
+                <Chip
+                  label={viewingBatch.is_deleted ? 'true' : 'false'}
+                  color={viewingBatch.is_deleted ? 'error' : 'success'}
+                  size="small"
+                />
+              </Box>
+
+              <Typography variant="subtitle2" color="text.secondary">created_at</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>{formatDate(viewingBatch.created_at)}</Typography>
+
+              <Typography variant="subtitle2" color="text.secondary">updated_at</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>{formatDate(viewingBatch.updated_at)}</Typography>
+
+              <Typography variant="subtitle2" color="text.secondary">deleted_at</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                {viewingBatch.deleted_at ? formatDate(viewingBatch.deleted_at) : 'null'}
+              </Typography>
+
+              <Typography variant="subtitle2" color="text.secondary">last_synced_at</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                {viewingBatch.last_synced_at ? formatDate(viewingBatch.last_synced_at) : 'null'}
+              </Typography>
+
+              <Typography variant="subtitle2" color="text.secondary">sync_status</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>{viewingBatch.sync_status || 'null'}</Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseViewDialog}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog}>
+        <DialogTitle>
+          {deleteType === 'soft' ? 'Confirm Soft Delete' : 'Confirm Permanent Delete'}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {deleteType === 'soft' ? (
+              <>
+                Are you sure you want to soft delete <strong>{deletingBatch?.name}</strong>?
+                <br />
+                <br />
+                This will mark the batch as deleted but can be restored later.
+              </>
+            ) : (
+              <>
+                <strong style={{ color: 'red' }}>WARNING: This action cannot be undone!</strong>
+                <br />
+                <br />
+                Are you sure you want to permanently delete <strong>{deletingBatch?.name}</strong>?
+                <br />
+                <br />
+                All data will be permanently removed from the database.
+              </>
+            )}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDeleteDialog}>Cancel</Button>
+          <Button
+            onClick={handleConfirmDelete}
+            color={deleteType === 'soft' ? 'warning' : 'error'}
+            variant="contained"
+          >
+            {deleteType === 'soft' ? 'Soft Delete' : 'Permanently Delete'}
           </Button>
         </DialogActions>
       </Dialog>

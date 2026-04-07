@@ -39,7 +39,17 @@ export const attendanceService = {
     return await api.put<Attendance>(`${API_ENDPOINTS.ATTENDANCE}/${id}`, data);
   },
 
-  // Delete attendance
+  // Soft delete attendance
+  softDelete: async (id: number): Promise<{ message: string }> => {
+    return await api.delete<{ message: string }>(`${API_ENDPOINTS.ATTENDANCE}/${id}?soft=true`);
+  },
+
+  // Hard delete attendance (permanent)
+  hardDelete: async (id: number): Promise<{ message: string }> => {
+    return await api.delete<{ message: string }>(`${API_ENDPOINTS.ATTENDANCE}/${id}?soft=false`);
+  },
+
+  // Legacy method (defaults to soft delete)
   delete: async (id: number): Promise<{ message: string }> => {
     return await api.delete<{ message: string }>(`${API_ENDPOINTS.ATTENDANCE}/${id}`);
   },

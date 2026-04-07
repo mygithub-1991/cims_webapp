@@ -29,7 +29,17 @@ export const feeService = {
     return await api.put<FeeRecord>(`${API_ENDPOINTS.FEES}/${id}`, data);
   },
 
-  // Delete fee record
+  // Soft delete fee record
+  softDelete: async (id: number): Promise<{ message: string }> => {
+    return await api.delete<{ message: string }>(`${API_ENDPOINTS.FEES}/${id}?soft=true`);
+  },
+
+  // Hard delete fee record (permanent)
+  hardDelete: async (id: number): Promise<{ message: string }> => {
+    return await api.delete<{ message: string }>(`${API_ENDPOINTS.FEES}/${id}?soft=false`);
+  },
+
+  // Legacy method (defaults to soft delete)
   delete: async (id: number): Promise<{ message: string }> => {
     return await api.delete<{ message: string }>(`${API_ENDPOINTS.FEES}/${id}`);
   },

@@ -19,8 +19,9 @@ import {
   DialogActions,
   TextField,
   MenuItem,
+  DialogContentText,
 } from '@mui/material';
-import { Add, Edit, Delete, Refresh } from '@mui/icons-material';
+import { Add, Edit, Delete, Refresh, Visibility, DeleteForever } from '@mui/icons-material';
 import MainLayout from '../components/Layout/MainLayout';
 import { feeService } from '../services/feeService';
 import { studentService } from '../services/studentService';
@@ -33,7 +34,12 @@ const FeesPage: React.FC = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingFee, setEditingFee] = useState<FeeRecord | null>(null);
+  const [viewingFee, setViewingFee] = useState<FeeRecord | null>(null);
+  const [deletingFee, setDeletingFee] = useState<FeeRecord | null>(null);
+  const [deleteType, setDeleteType] = useState<'soft' | 'hard'>('soft');
   const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState({
     student_id: '',
@@ -118,14 +124,40 @@ const FeesPage: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this fee record?')) {
-      try {
-        await feeService.delete(id);
-        loadData();
-      } catch (error) {
-        console.error('Failed to delete fee:', error);
+  const handleOpenViewDialog = (fee: FeeRecord) => {
+    setViewingFee(fee);
+    setViewDialogOpen(true);
+  };
+
+  const handleCloseViewDialog = () => {
+    setViewDialogOpen(false);
+    setViewingFee(null);
+  };
+
+  const handleOpenDeleteDialog = (fee: FeeRecord, type: 'soft' | 'hard') => {
+    setDeletingFee(fee);
+    setDeleteType(type);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setDeletingFee(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingFee) return;
+
+    try {
+      if (deleteType === 'soft') {
+        await feeService.softDelete(deletingFee.id);
+      } else {
+        await feeService.hardDelete(deletingFee.id);
       }
+      handleCloseDeleteDialog();
+      loadData();
+    } catch (error) {
+      console.error('Failed to delete fee:', error);
     }
   };
 
@@ -229,11 +261,17 @@ const FeesPage: React.FC = () => {
                 <TableCell>{formatDate(fee.date)}</TableCell>
                 <TableCell>{fee.remarks || '-'}</TableCell>
                 <TableCell align="right">
-                  <IconButton size="small" onClick={() => handleOpenDialog(fee)}>
+                  <IconButton size="small" onClick={() => handleOpenViewDialog(fee)} title="View Details">
+                    <Visibility />
+                  </IconButton>
+                  <IconButton size="small" onClick={() => handleOpenDialog(fee)} title="Edit">
                     <Edit />
                   </IconButton>
-                  <IconButton size="small" onClick={() => handleDelete(fee.id)}>
+                  <IconButton size="small" onClick={() => handleOpenDeleteDialog(fee, 'soft')} title="Soft Delete" color="warning">
                     <Delete />
+                  </IconButton>
+                  <IconButton size="small" onClick={() => handleOpenDeleteDialog(fee, 'hard')} title="Permanent Delete" color="error">
+                    <DeleteForever />
                   </IconButton>
                 </TableCell>
               </TableRow>
@@ -317,6 +355,106 @@ const FeesPage: React.FC = () => {
           <Button onClick={handleCloseDialog}>Cancel</Button>
           <Button onClick={handleSubmit} variant="contained">
             {editingFee ? 'Update' : 'Collect'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* View Dialog */}
+      <Dialog open={viewDialogOpen} onClose={handleCloseViewDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>Fee Record Details</DialogTitle>
+        <DialogContent>
+          {viewingFee && (
+            <Box sx={{ pt: 2 }}>
+              <Typography variant="subtitle2" color="text.secondary">id</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>{viewingFee.id}</Typography>
+
+              <Typography variant="subtitle2" color="text.secondary">student_id</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                {viewingFee.student_id} ({getStudentName(viewingFee.student_id)})
+              </Typography>
+
+              <Typography variant="subtitle2" color="text.secondary">amount_paid</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>{formatCurrency(viewingFee.amount_paid)}</Typography>
+
+              <Typography variant="subtitle2" color="text.secondary">date</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>{formatDate(viewingFee.date)}</Typography>
+
+              <Typography variant="subtitle2" color="text.secondary">payment_method</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>{viewingFee.payment_method || 'null'}</Typography>
+
+              <Typography variant="subtitle2" color="text.secondary">receipt_id</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>{viewingFee.receipt_id || 'null'}</Typography>
+
+              <Typography variant="subtitle2" color="text.secondary">remarks</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>{viewingFee.remarks || 'null'}</Typography>
+
+              <Typography variant="subtitle2" color="text.secondary">is_deleted</Typography>
+              <Box sx={{ mb: 2 }}>
+                <Chip
+                  label={viewingFee.is_deleted ? 'true' : 'false'}
+                  color={viewingFee.is_deleted ? 'error' : 'success'}
+                  size="small"
+                />
+              </Box>
+
+              <Typography variant="subtitle2" color="text.secondary">created_at</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>{formatDate(viewingFee.created_at)}</Typography>
+
+              <Typography variant="subtitle2" color="text.secondary">deleted_at</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                {viewingFee.deleted_at ? formatDate(viewingFee.deleted_at) : 'null'}
+              </Typography>
+
+              <Typography variant="subtitle2" color="text.secondary">last_synced_at</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                {viewingFee.last_synced_at ? formatDate(viewingFee.last_synced_at) : 'null'}
+              </Typography>
+
+              <Typography variant="subtitle2" color="text.secondary">sync_status</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>{viewingFee.sync_status || 'null'}</Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseViewDialog}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog}>
+        <DialogTitle>
+          {deleteType === 'soft' ? 'Confirm Soft Delete' : 'Confirm Permanent Delete'}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {deleteType === 'soft' ? (
+              <>
+                Are you sure you want to soft delete fee record <strong>{deletingFee?.receipt_id || `#${deletingFee?.id}`}</strong>?
+                <br />
+                <br />
+                This will mark the fee record as deleted but can be restored later.
+              </>
+            ) : (
+              <>
+                <strong style={{ color: 'red' }}>WARNING: This action cannot be undone!</strong>
+                <br />
+                <br />
+                Are you sure you want to permanently delete fee record <strong>{deletingFee?.receipt_id || `#${deletingFee?.id}`}</strong>?
+                <br />
+                <br />
+                All data will be permanently removed from the database.
+              </>
+            )}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDeleteDialog}>Cancel</Button>
+          <Button
+            onClick={handleConfirmDelete}
+            color={deleteType === 'soft' ? 'warning' : 'error'}
+            variant="contained"
+          >
+            {deleteType === 'soft' ? 'Soft Delete' : 'Permanently Delete'}
           </Button>
         </DialogActions>
       </Dialog>
