@@ -1,6 +1,6 @@
 import { api } from './api';
 import { API_ENDPOINTS } from '../config';
-import { FeeRecord, DateFilter } from '../types';
+import { FeeRecord } from '../types';
 
 export const feeService = {
   // Get all fee records

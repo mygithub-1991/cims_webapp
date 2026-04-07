@@ -1,6 +1,6 @@
 import { api } from './api';
 import { API_ENDPOINTS } from '../config';
-import { Attendance, DateFilter } from '../types';
+import { Attendance } from '../types';
 
 export const attendanceService = {
   // Get all attendance records
