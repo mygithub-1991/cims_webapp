@@ -1,0 +1,349 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Typography,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  CircularProgress,
+  TextField,
+  MenuItem,
+  Card,
+  CardContent,
+  Chip,
+  IconButton,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+} from '@mui/material';
+import { Save, Refresh, CheckCircle, Cancel, AccessTime } from '@mui/icons-material';
+import MainLayout from '../components/Layout/MainLayout';
+import { attendanceService } from '../services/attendanceService';
+import { studentService } from '../services/studentService';
+import { batchService } from '../services/batchService';
+import { Batch, Student } from '../types';
+import { formatDate, getStartOfDay } from '../utils/dateUtils';
+
+const AttendancePage: React.FC = () => {
+  const [batches, setBatches] = useState<Batch[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedBatch, setSelectedBatch] = useState<string>('');
+  const [selectedDate, setSelectedDate] = useState<string>(
+    new Date().toISOString().split('T')[0]
+  );
+  const [attendanceData, setAttendanceData] = useState<{
+    [key: number]: { status: 'present' | 'absent' | 'late'; remarks: string };
+  }>({});
+
+  useEffect(() => {
+    loadBatches();
+  }, []);
+
+  useEffect(() => {
+    if (selectedBatch) {
+      loadStudents();
+    }
+  }, [selectedBatch]);
+
+  const loadBatches = async () => {
+    try {
+      const batchesData = await batchService.getAll();
+      setBatches(batchesData);
+    } catch (error) {
+      console.error('Failed to load batches:', error);
+    }
+  };
+
+  const loadStudents = async () => {
+    try {
+      setLoading(true);
+      const studentsData = await studentService.getAll({
+        batch_id: parseInt(selectedBatch),
+      });
+      setStudents(studentsData);
+
+      // Initialize attendance data with default 'present' status
+      const initialData: typeof attendanceData = {};
+      studentsData.forEach((student) => {
+        initialData[student.id] = { status: 'present', remarks: '' };
+      });
+      setAttendanceData(initialData);
+    } catch (error) {
+      console.error('Failed to load students:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStatusChange = (studentId: number, status: 'present' | 'absent' | 'late') => {
+    setAttendanceData({
+      ...attendanceData,
+      [studentId]: { ...attendanceData[studentId], status },
+    });
+  };
+
+  const handleRemarksChange = (studentId: number, remarks: string) => {
+    setAttendanceData({
+      ...attendanceData,
+      [studentId]: { ...attendanceData[studentId], remarks },
+    });
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedBatch) {
+      alert('Please select a batch');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const attendanceArray = Object.entries(attendanceData).map(([studentId, data]) => ({
+        student_id: parseInt(studentId),
+        status: data.status,
+        remarks: data.remarks || undefined,
+      }));
+
+      await attendanceService.markAttendance({
+        batch_id: parseInt(selectedBatch),
+        date: getStartOfDay(new Date(selectedDate).getTime()),
+        attendance: attendanceArray,
+      });
+
+      alert('Attendance marked successfully!');
+      loadStudents();
+    } catch (error) {
+      console.error('Failed to mark attendance:', error);
+      alert('Failed to mark attendance. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'present':
+        return <CheckCircle color="success" />;
+      case 'absent':
+        return <Cancel color="error" />;
+      case 'late':
+        return <AccessTime color="warning" />;
+      default:
+        return null;
+    }
+  };
+
+  const getSummary = () => {
+    const summary = { present: 0, absent: 0, late: 0 };
+    Object.values(attendanceData).forEach((data) => {
+      summary[data.status]++;
+    });
+    return summary;
+  };
+
+  const summary = getSummary();
+
+  return (
+    <MainLayout>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h4" gutterBottom>
+          Mark Attendance
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Select batch and date to mark student attendance
+        </Typography>
+      </Box>
+
+      {/* Batch and Date Selection */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+            <Box sx={{ flex: "1 1 300px" }}>
+              <TextField
+                fullWidth
+                select
+                label="Select Batch"
+                value={selectedBatch}
+                onChange={(e) => setSelectedBatch(e.target.value)}
+              >
+                <MenuItem value="">Select Batch</MenuItem>
+                {batches.map((batch) => (
+                  <MenuItem key={batch.id} value={batch.id}>
+                    {batch.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Box>
+            <Box sx={{ flex: "1 1 300px" }}>
+              <TextField
+                fullWidth
+                label="Date"
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Box>
+            <Box sx={{ flex: "1 1 300px" }}>
+              <Button
+                fullWidth
+                variant="outlined"
+                startIcon={<Refresh />}
+                onClick={loadStudents}
+                disabled={!selectedBatch}
+                sx={{ height: '56px' }}
+              >
+                Load Students
+              </Button>
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
+
+      {/* Summary Cards */}
+      {students.length > 0 && (
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 3 }}>
+          <Box sx={{ flex: '1 1 200px' }}>
+            <Card>
+              <CardContent>
+                <Typography variant="body2" color="text.secondary">
+                  Total Students
+                </Typography>
+                <Typography variant="h4">{students.length}</Typography>
+              </CardContent>
+            </Card>
+          </Box>
+          <Box sx={{ flex: '1 1 200px' }}>
+            <Card sx={{ bgcolor: 'success.light' }}>
+              <CardContent>
+                <Typography variant="body2" color="text.secondary">
+                  Present
+                </Typography>
+                <Typography variant="h4">{summary.present}</Typography>
+              </CardContent>
+            </Card>
+          </Box>
+          <Box sx={{ flex: '1 1 200px' }}>
+            <Card sx={{ bgcolor: 'error.light' }}>
+              <CardContent>
+                <Typography variant="body2" color="text.secondary">
+                  Absent
+                </Typography>
+                <Typography variant="h4">{summary.absent}</Typography>
+              </CardContent>
+            </Card>
+          </Box>
+          <Box sx={{ flex: '1 1 200px' }}>
+            <Card sx={{ bgcolor: 'warning.light' }}>
+              <CardContent>
+                <Typography variant="body2" color="text.secondary">
+                  Late
+                </Typography>
+                <Typography variant="h4">{summary.late}</Typography>
+              </CardContent>
+            </Card>
+          </Box>
+        </Box>
+      )}
+
+      {/* Attendance Table */}
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '40vh' }}>
+          <CircularProgress />
+        </Box>
+      ) : students.length > 0 ? (
+        <>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Student Name</TableCell>
+                  <TableCell>Batch</TableCell>
+                  <TableCell align="center">Status</TableCell>
+                  <TableCell>Remarks</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {students.map((student) => (
+                  <TableRow key={student.id}>
+                    <TableCell>{student.name}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={batches.find((b) => b.id === student.batch_id)?.name || '-'}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <RadioGroup
+                        row
+                        value={attendanceData[student.id]?.status || 'present'}
+                        onChange={(e) =>
+                          handleStatusChange(
+                            student.id,
+                            e.target.value as 'present' | 'absent' | 'late'
+                          )
+                        }
+                      >
+                        <FormControlLabel
+                          value="present"
+                          control={<Radio color="success" />}
+                          label="Present"
+                        />
+                        <FormControlLabel
+                          value="absent"
+                          control={<Radio color="error" />}
+                          label="Absent"
+                        />
+                        <FormControlLabel
+                          value="late"
+                          control={<Radio color="warning" />}
+                          label="Late"
+                        />
+                      </RadioGroup>
+                    </TableCell>
+                    <TableCell>
+                      <TextField
+                        fullWidth
+                        size="small"
+                        placeholder="Add remarks (optional)"
+                        value={attendanceData[student.id]?.remarks || ''}
+                        onChange={(e) => handleRemarksChange(student.id, e.target.value)}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={<Save />}
+              onClick={handleSubmit}
+              disabled={loading}
+            >
+              Save Attendance
+            </Button>
+          </Box>
+        </>
+      ) : (
+        <Paper sx={{ p: 4, textAlign: 'center' }}>
+          <Typography variant="body1" color="text.secondary">
+            {selectedBatch
+              ? 'No students found in this batch'
+              : 'Please select a batch to mark attendance'}
+          </Typography>
+        </Paper>
+      )}
+    </MainLayout>
+  );
+};
+
+export default AttendancePage;

@@ -1,0 +1,292 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Typography,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+  Chip,
+  CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  MenuItem,
+} from '@mui/material';
+import { Add, Edit, Delete, Refresh } from '@mui/icons-material';
+import MainLayout from '../components/Layout/MainLayout';
+import { batchService } from '../services/batchService';
+import { teacherService } from '../services/teacherService';
+import { Batch, Teacher } from '../types';
+import { formatDate } from '../utils/dateUtils';
+
+const BatchesPage: React.FC = () => {
+  const [batches, setBatches] = useState<Batch[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingBatch, setEditingBatch] = useState<Batch | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    teacher_id: '',
+    schedule: '',
+    start_date: '',
+    end_date: '',
+  });
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [batchesData, teachersData] = await Promise.all([
+        batchService.getAll(),
+        teacherService.getAll(),
+      ]);
+      setBatches(batchesData);
+      setTeachers(teachersData);
+    } catch (error) {
+      console.error('Failed to load batches:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOpenDialog = (batch?: Batch) => {
+    if (batch) {
+      setEditingBatch(batch);
+      setFormData({
+        name: batch.name,
+        description: batch.description || '',
+        teacher_id: batch.teacher_id?.toString() || '',
+        schedule: batch.schedule || '',
+        start_date: batch.start_date ? new Date(batch.start_date).toISOString().split('T')[0] : '',
+        end_date: batch.end_date ? new Date(batch.end_date).toISOString().split('T')[0] : '',
+      });
+    } else {
+      setEditingBatch(null);
+      setFormData({
+        name: '',
+        description: '',
+        teacher_id: '',
+        schedule: '',
+        start_date: '',
+        end_date: '',
+      });
+    }
+    setDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+    setEditingBatch(null);
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const data = {
+        name: formData.name,
+        description: formData.description || undefined,
+        teacher_id: formData.teacher_id ? parseInt(formData.teacher_id) : undefined,
+        schedule: formData.schedule || undefined,
+        start_date: formData.start_date ? new Date(formData.start_date).getTime() : undefined,
+        end_date: formData.end_date ? new Date(formData.end_date).getTime() : undefined,
+      };
+
+      if (editingBatch) {
+        await batchService.update(editingBatch.id, data);
+      } else {
+        await batchService.create(data);
+      }
+
+      handleCloseDialog();
+      loadData();
+    } catch (error) {
+      console.error('Failed to save batch:', error);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (window.confirm('Are you sure you want to delete this batch?')) {
+      try {
+        await batchService.delete(id);
+        loadData();
+      } catch (error) {
+        console.error('Failed to delete batch:', error);
+      }
+    }
+  };
+
+  const getTeacherName = (teacherId?: number) => {
+    if (!teacherId) return '-';
+    const teacher = teachers.find((t) => t.id === teacherId);
+    return teacher?.name || '-';
+  };
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '70vh' }}>
+          <CircularProgress />
+        </Box>
+      </MainLayout>
+    );
+  }
+
+  return (
+    <MainLayout>
+      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box>
+          <Typography variant="h4" gutterBottom>
+            Batches
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Manage batch records
+          </Typography>
+        </Box>
+        <Box>
+          <Button
+            variant="outlined"
+            startIcon={<Refresh />}
+            onClick={loadData}
+            sx={{ mr: 2 }}
+          >
+            Refresh
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={() => handleOpenDialog()}
+          >
+            Add Batch
+          </Button>
+        </Box>
+      </Box>
+
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Name</TableCell>
+              <TableCell>Teacher</TableCell>
+              <TableCell>Schedule</TableCell>
+              <TableCell>Description</TableCell>
+              <TableCell>Start Date</TableCell>
+              <TableCell>End Date</TableCell>
+              <TableCell align="right">Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {batches.map((batch) => (
+              <TableRow key={batch.id}>
+                <TableCell>
+                  <Chip label={batch.name} color="primary" />
+                </TableCell>
+                <TableCell>{getTeacherName(batch.teacher_id)}</TableCell>
+                <TableCell>{batch.schedule || '-'}</TableCell>
+                <TableCell>{batch.description || '-'}</TableCell>
+                <TableCell>
+                  {batch.start_date ? formatDate(batch.start_date) : '-'}
+                </TableCell>
+                <TableCell>
+                  {batch.end_date ? formatDate(batch.end_date) : '-'}
+                </TableCell>
+                <TableCell align="right">
+                  <IconButton size="small" onClick={() => handleOpenDialog(batch)}>
+                    <Edit />
+                  </IconButton>
+                  <IconButton size="small" onClick={() => handleDelete(batch.id)}>
+                    <Delete />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      {/* Add/Edit Dialog */}
+      <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>{editingBatch ? 'Edit Batch' : 'Add Batch'}</DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            label="Batch Name"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            margin="normal"
+            required
+          />
+          <TextField
+            fullWidth
+            label="Description"
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            margin="normal"
+            multiline
+            rows={2}
+          />
+          <TextField
+            fullWidth
+            select
+            label="Teacher"
+            value={formData.teacher_id}
+            onChange={(e) => setFormData({ ...formData, teacher_id: e.target.value })}
+            margin="normal"
+          >
+            <MenuItem value="">None</MenuItem>
+            {teachers.map((teacher) => (
+              <MenuItem key={teacher.id} value={teacher.id}>
+                {teacher.name}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            fullWidth
+            label="Schedule"
+            value={formData.schedule}
+            onChange={(e) => setFormData({ ...formData, schedule: e.target.value })}
+            margin="normal"
+            placeholder="e.g., Mon-Fri 10:00 AM - 12:00 PM"
+          />
+          <TextField
+            fullWidth
+            label="Start Date"
+            type="date"
+            value={formData.start_date}
+            onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+            margin="normal"
+            InputLabelProps={{ shrink: true }}
+          />
+          <TextField
+            fullWidth
+            label="End Date"
+            type="date"
+            value={formData.end_date}
+            onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+            margin="normal"
+            InputLabelProps={{ shrink: true }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <Button onClick={handleSubmit} variant="contained">
+            {editingBatch ? 'Update' : 'Add'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </MainLayout>
+  );
+};
+
+export default BatchesPage;
