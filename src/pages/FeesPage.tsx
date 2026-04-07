@@ -36,10 +36,10 @@ const FeesPage: React.FC = () => {
   const [editingFee, setEditingFee] = useState<FeeRecord | null>(null);
   const [formData, setFormData] = useState({
     student_id: '',
-    amount: '',
+    amount_paid: '',
     date: new Date().toISOString().split('T')[0],
     payment_method: '',
-    receipt_number: '',
+    receipt_id: '',
     remarks: '',
   });
 
@@ -68,20 +68,20 @@ const FeesPage: React.FC = () => {
       setEditingFee(fee);
       setFormData({
         student_id: fee.student_id.toString(),
-        amount: fee.amount.toString(),
+        amount_paid: fee.amount_paid.toString(),
         date: new Date(fee.date).toISOString().split('T')[0],
         payment_method: fee.payment_method || '',
-        receipt_number: fee.receipt_number || '',
+        receipt_id: fee.receipt_id || '',
         remarks: fee.remarks || '',
       });
     } else {
       setEditingFee(null);
       setFormData({
         student_id: '',
-        amount: '',
+        amount_paid: '',
         date: new Date().toISOString().split('T')[0],
         payment_method: '',
-        receipt_number: '',
+        receipt_id: '',
         remarks: '',
       });
     }
@@ -97,10 +97,10 @@ const FeesPage: React.FC = () => {
     try {
       const data = {
         student_id: parseInt(formData.student_id),
-        amount: parseFloat(formData.amount),
+        amount_paid: parseFloat(formData.amount_paid),
         date: new Date(formData.date).getTime(),
         payment_method: formData.payment_method || undefined,
-        receipt_number: formData.receipt_number || undefined,
+        receipt_id: formData.receipt_id || undefined,
         remarks: formData.remarks || undefined,
       };
 
@@ -190,12 +190,12 @@ const FeesPage: React.FC = () => {
             {fees.map((fee) => (
               <TableRow key={fee.id}>
                 <TableCell>
-                  <Chip label={fee.receipt_number || `#${fee.id}`} size="small" />
+                  <Chip label={fee.receipt_id || `#${fee.id}`} size="small" />
                 </TableCell>
                 <TableCell>{getStudentName(fee.student_id)}</TableCell>
                 <TableCell>
                   <Typography fontWeight="bold" color="success.main">
-                    {formatCurrency(fee.amount)}
+                    {formatCurrency(fee.amount_paid)}
                   </Typography>
                 </TableCell>
                 <TableCell>
@@ -243,10 +243,10 @@ const FeesPage: React.FC = () => {
           </TextField>
           <TextField
             fullWidth
-            label="Amount"
+            label="Amount Paid"
             type="number"
-            value={formData.amount}
-            onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+            value={formData.amount_paid}
+            onChange={(e) => setFormData({ ...formData, amount_paid: e.target.value })}
             margin="normal"
             required
           />
@@ -277,9 +277,9 @@ const FeesPage: React.FC = () => {
           </TextField>
           <TextField
             fullWidth
-            label="Receipt Number"
-            value={formData.receipt_number}
-            onChange={(e) => setFormData({ ...formData, receipt_number: e.target.value })}
+            label="Receipt ID"
+            value={formData.receipt_id}
+            onChange={(e) => setFormData({ ...formData, receipt_id: e.target.value })}
             margin="normal"
           />
           <TextField

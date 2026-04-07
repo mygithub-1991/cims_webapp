@@ -21,7 +21,7 @@ export const API_ENDPOINTS = {
   ATTENDANCE: '/attendance',
 
   // Fees
-  FEES: '/fees',
+  FEES: '/fee-records',
 
   // Expenses
   EXPENSES: '/expenses',

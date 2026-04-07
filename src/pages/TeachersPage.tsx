@@ -33,11 +33,8 @@ const TeachersPage: React.FC = () => {
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
-    phone: '',
+    contact_number: '',
     subject: '',
-    qualification: '',
-    experience_years: '',
     salary: '',
     date_of_joining: new Date().getTime(),
   });
@@ -63,11 +60,8 @@ const TeachersPage: React.FC = () => {
       setEditingTeacher(teacher);
       setFormData({
         name: teacher.name,
-        email: teacher.email || '',
-        phone: teacher.phone || '',
+        contact_number: teacher.contact_number || '',
         subject: teacher.subject || '',
-        qualification: teacher.qualification || '',
-        experience_years: teacher.experience_years?.toString() || '',
         salary: teacher.salary?.toString() || '',
         date_of_joining: teacher.date_of_joining,
       });
@@ -75,11 +69,8 @@ const TeachersPage: React.FC = () => {
       setEditingTeacher(null);
       setFormData({
         name: '',
-        email: '',
-        phone: '',
+        contact_number: '',
         subject: '',
-        qualification: '',
-        experience_years: '',
         salary: '',
         date_of_joining: new Date().getTime(),
       });
@@ -96,7 +87,6 @@ const TeachersPage: React.FC = () => {
     try {
       const data = {
         ...formData,
-        experience_years: formData.experience_years ? parseInt(formData.experience_years) : undefined,
         salary: formData.salary ? parseFloat(formData.salary) : undefined,
       };
 
@@ -170,10 +160,7 @@ const TeachersPage: React.FC = () => {
             <TableRow>
               <TableCell>Name</TableCell>
               <TableCell>Subject</TableCell>
-              <TableCell>Phone</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Experience</TableCell>
-              <TableCell>Qualification</TableCell>
+              <TableCell>Contact Number</TableCell>
               <TableCell>Salary</TableCell>
               <TableCell>Joining Date</TableCell>
               <TableCell align="right">Actions</TableCell>
@@ -190,12 +177,8 @@ const TeachersPage: React.FC = () => {
                     '-'
                   )}
                 </TableCell>
-                <TableCell>{teacher.phone || '-'}</TableCell>
-                <TableCell>{teacher.email || '-'}</TableCell>
-                <TableCell>
-                  {teacher.experience_years ? `${teacher.experience_years} years` : '-'}
-                </TableCell>
-                <TableCell>{teacher.qualification || '-'}</TableCell>
+                <TableCell>{teacher.contact_number || '-'}</TableCell>
+                <TableCell>{teacher.subject || '-'}</TableCell>
                 <TableCell>
                   {teacher.salary ? formatCurrency(teacher.salary) : '-'}
                 </TableCell>
@@ -235,32 +218,9 @@ const TeachersPage: React.FC = () => {
           />
           <TextField
             fullWidth
-            label="Email"
-            type="email"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            margin="normal"
-          />
-          <TextField
-            fullWidth
-            label="Phone"
-            value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            margin="normal"
-          />
-          <TextField
-            fullWidth
-            label="Qualification"
-            value={formData.qualification}
-            onChange={(e) => setFormData({ ...formData, qualification: e.target.value })}
-            margin="normal"
-          />
-          <TextField
-            fullWidth
-            label="Experience (Years)"
-            type="number"
-            value={formData.experience_years}
-            onChange={(e) => setFormData({ ...formData, experience_years: e.target.value })}
+            label="Contact Number"
+            value={formData.contact_number}
+            onChange={(e) => setFormData({ ...formData, contact_number: e.target.value })}
             margin="normal"
           />
           <TextField

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CIMS API Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        button { padding: 10px 20px; margin: 5px; }
+        pre { background: #f5f5f5; padding: 10px; overflow: auto; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>CIMS Dashboard API Test</h1>
+
+    <div class="section">
+        <h2>1. Login</h2>
+        <button onclick="login()">Test Login</button>
+        <div id="loginResult"></div>
+    </div>
+
+    <div class="section">
+        <h2>2. Fetch Dashboard Data</h2>
+        <button onclick="fetchDashboard()">Fetch Data</button>
+        <div id="dashboardResult"></div>
+    </div>
+
+    <script>
+        let token = localStorage.getItem('cims_auth_token');
+
+        async function login() {
+            const result = document.getElementById('loginResult');
+            result.innerHTML = 'Logging in...';
+
+            try {
+                const response = await fetch('http://localhost:8000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: 'admin', password: 'admin' })
+                });
+
+                const data = await response.json();
+
+                if (data.access_token) {
+                    token = data.access_token;
+                    localStorage.setItem('cims_auth_token', token);
+                    result.innerHTML = `<div class="success">✅ Logged in successfully!</div>
+                        <pre>Token: ${token.substring(0, 50)}...</pre>`;
+                } else {
+                    result.innerHTML = `<div class="error">❌ Login failed</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function fetchDashboard() {
+            const result = document.getElementById('dashboardResult');
+
+            if (!token) {
+                result.innerHTML = '<div class="error">❌ Please login first!</div>';
+                return;
+            }
+
+            result.innerHTML = 'Fetching data...';
+
+            try {
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                };
+
+                const [students, teachers, batches, fees, expenses] = await Promise.all([
+                    fetch('http://localhost:8000/api/students/', { headers }).then(r => r.json()),
+                    fetch('http://localhost:8000/api/teachers/', { headers }).then(r => r.json()),
+                    fetch('http://localhost:8000/api/batches/', { headers }).then(r => r.json()),
+                    fetch('http://localhost:8000/api/fee-records/', { headers }).then(r => r.json()),
+                    fetch('http://localhost:8000/api/expenses/', { headers }).then(r => r.json())
+                ]);
+
+                const totalRevenue = fees.reduce((sum, fee) => sum + fee.amount_paid, 0);
+                const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+                const pendingFees = students.reduce(
+                    (sum, student) => sum + Math.max(0, student.total_fees - student.paid_fees),
+                    0
+                );
+
+                result.innerHTML = `
+                    <div class="success">✅ Data fetched successfully!</div>
+                    <h3>Dashboard Statistics:</h3>
+                    <pre>
+Total Students:  ${students.length}
+Total Teachers:  ${teachers.length}
+Total Batches:   ${batches.length}
+Pending Fees:    Rs.${pendingFees.toLocaleString()}
+Total Revenue:   Rs.${totalRevenue.toLocaleString()}
+Total Expenses:  Rs.${totalExpenses.toLocaleString()}
+Net Profit:      Rs.${(totalRevenue - totalExpenses).toLocaleString()}
+                    </pre>
+                    <h3>Sample Data:</h3>
+                    <pre>Students: ${students.length} records
+First student: ${JSON.stringify(students[0], null, 2)}
+
+Fee Records: ${fees.length} records
+First fee: ${JSON.stringify(fees[0], null, 2)}
+                    </pre>
+                `;
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Error: ${error.message}</div>
+                    <pre>${error.stack}</pre>`;
+            }
+        }
+
+        // Auto-test on load if token exists
+        if (token) {
+            document.addEventListener('DOMContentLoaded', () => {
+                document.getElementById('loginResult').innerHTML =
+                    '<div class="success">✅ Token found in localStorage</div>';
+            });
+        }
+    </script>
+</body>
+</html>

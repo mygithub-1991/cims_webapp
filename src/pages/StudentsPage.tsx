@@ -37,11 +37,11 @@ const StudentsPage: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
+    contact_number: '',
     batch_id: '',
     parent_name: '',
-    parent_phone: '',
-    monthly_fee: '',
+    parent_contact: '',
+    total_fees: '',
     date_of_joining: new Date().getTime(),
   });
 
@@ -70,24 +70,24 @@ const StudentsPage: React.FC = () => {
       setEditingStudent(student);
       setFormData({
         name: student.name,
-        email: student.email || '',
-        phone: student.phone || '',
+        email: '',
+        contact_number: student.contact_number || '',
         batch_id: student.batch_id?.toString() || '',
         parent_name: student.parent_name || '',
-        parent_phone: student.parent_phone || '',
-        monthly_fee: student.monthly_fee.toString(),
-        date_of_joining: student.date_of_joining,
+        parent_contact: student.parent_contact || '',
+        total_fees: student.total_fees.toString(),
+        date_of_joining: student.date_of_joining || new Date().getTime(),
       });
     } else {
       setEditingStudent(null);
       setFormData({
         name: '',
         email: '',
-        phone: '',
+        contact_number: '',
         batch_id: '',
         parent_name: '',
-        parent_phone: '',
-        monthly_fee: '',
+        parent_contact: '',
+        total_fees: '',
         date_of_joining: new Date().getTime(),
       });
     }
@@ -104,7 +104,7 @@ const StudentsPage: React.FC = () => {
       const data = {
         ...formData,
         batch_id: formData.batch_id ? parseInt(formData.batch_id) : undefined,
-        monthly_fee: parseFloat(formData.monthly_fee),
+        total_fees: parseFloat(formData.total_fees),
       };
 
       if (editingStudent) {
@@ -138,7 +138,7 @@ const StudentsPage: React.FC = () => {
   };
 
   const getPendingFees = (student: Student) => {
-    return student.monthly_fee - student.paid_fees;
+    return student.total_fees - student.paid_fees;
   };
 
   if (loading) {
@@ -203,9 +203,9 @@ const StudentsPage: React.FC = () => {
                 <TableCell>
                   <Chip label={getBatchName(student.batch_id)} size="small" />
                 </TableCell>
-                <TableCell>{student.phone || '-'}</TableCell>
+                <TableCell>{student.contact_number || '-'}</TableCell>
                 <TableCell>{student.parent_name || '-'}</TableCell>
-                <TableCell>{formatCurrency(student.monthly_fee)}</TableCell>
+                <TableCell>{formatCurrency(student.total_fees)}</TableCell>
                 <TableCell>{formatCurrency(student.paid_fees)}</TableCell>
                 <TableCell>
                   <Chip
@@ -214,7 +214,7 @@ const StudentsPage: React.FC = () => {
                     size="small"
                   />
                 </TableCell>
-                <TableCell>{formatDate(student.date_of_joining)}</TableCell>
+                <TableCell>{student.date_of_joining ? formatDate(student.date_of_joining) : '-'}</TableCell>
                 <TableCell align="right">
                   <IconButton size="small" onClick={() => handleOpenDialog(student)}>
                     <Edit />
@@ -243,17 +243,9 @@ const StudentsPage: React.FC = () => {
           />
           <TextField
             fullWidth
-            label="Email"
-            type="email"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            margin="normal"
-          />
-          <TextField
-            fullWidth
-            label="Phone"
-            value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            label="Contact Number"
+            value={formData.contact_number}
+            onChange={(e) => setFormData({ ...formData, contact_number: e.target.value })}
             margin="normal"
           />
           <TextField
@@ -280,17 +272,17 @@ const StudentsPage: React.FC = () => {
           />
           <TextField
             fullWidth
-            label="Parent Phone"
-            value={formData.parent_phone}
-            onChange={(e) => setFormData({ ...formData, parent_phone: e.target.value })}
+            label="Parent Contact"
+            value={formData.parent_contact}
+            onChange={(e) => setFormData({ ...formData, parent_contact: e.target.value })}
             margin="normal"
           />
           <TextField
             fullWidth
-            label="Monthly Fee"
+            label="Total Fees"
             type="number"
-            value={formData.monthly_fee}
-            onChange={(e) => setFormData({ ...formData, monthly_fee: e.target.value })}
+            value={formData.total_fees}
+            onChange={(e) => setFormData({ ...formData, total_fees: e.target.value })}
             margin="normal"
             required
           />

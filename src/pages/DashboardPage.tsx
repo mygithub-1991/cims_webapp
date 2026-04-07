@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Card,
   CardContent,
@@ -34,6 +35,7 @@ interface Stats {
 }
 
 const DashboardPage: React.FC = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<Stats>({
     totalStudents: 0,
     totalTeachers: 0,
@@ -60,10 +62,10 @@ const DashboardPage: React.FC = () => {
         expenseService.getAll(),
       ]);
 
-      const totalRevenue = fees.reduce((sum, fee) => sum + fee.amount, 0);
+      const totalRevenue = fees.reduce((sum, fee) => sum + fee.amount_paid, 0);
       const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
       const pendingFees = students.reduce(
-        (sum, student) => sum + (student.monthly_fee - student.paid_fees),
+        (sum, student) => sum + Math.max(0, student.total_fees - student.paid_fees),
         0
       );
 
@@ -225,6 +227,7 @@ const DashboardPage: React.FC = () => {
           </Typography>
           <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mt: 2 }}>
             <Box
+              onClick={() => navigate('/attendance')}
               sx={{
                 p: 2,
                 bgcolor: 'primary.light',
@@ -241,6 +244,7 @@ const DashboardPage: React.FC = () => {
             </Box>
 
             <Box
+              onClick={() => navigate('/fees')}
               sx={{
                 p: 2,
                 bgcolor: 'success.light',
@@ -257,6 +261,7 @@ const DashboardPage: React.FC = () => {
             </Box>
 
             <Box
+              onClick={() => navigate('/students')}
               sx={{
                 p: 2,
                 bgcolor: 'warning.light',
@@ -273,6 +278,7 @@ const DashboardPage: React.FC = () => {
             </Box>
 
             <Box
+              onClick={() => navigate('/expenses')}
               sx={{
                 p: 2,
                 bgcolor: 'info.light',

@@ -25,7 +25,6 @@ import MainLayout from '../components/Layout/MainLayout';
 import { batchService } from '../services/batchService';
 import { teacherService } from '../services/teacherService';
 import { Batch, Teacher } from '../types';
-import { formatDate } from '../utils/dateUtils';
 
 const BatchesPage: React.FC = () => {
   const [batches, setBatches] = useState<Batch[]>([]);
@@ -37,7 +36,7 @@ const BatchesPage: React.FC = () => {
     name: '',
     description: '',
     teacher_id: '',
-    schedule: '',
+    time: '',
     start_date: '',
     end_date: '',
   });
@@ -67,11 +66,11 @@ const BatchesPage: React.FC = () => {
       setEditingBatch(batch);
       setFormData({
         name: batch.name,
-        description: batch.description || '',
+        description: '',
         teacher_id: batch.teacher_id?.toString() || '',
-        schedule: batch.schedule || '',
-        start_date: batch.start_date ? new Date(batch.start_date).toISOString().split('T')[0] : '',
-        end_date: batch.end_date ? new Date(batch.end_date).toISOString().split('T')[0] : '',
+        time: batch.time || '',
+        start_date: '',
+        end_date: '',
       });
     } else {
       setEditingBatch(null);
@@ -79,7 +78,7 @@ const BatchesPage: React.FC = () => {
         name: '',
         description: '',
         teacher_id: '',
-        schedule: '',
+        time: '',
         start_date: '',
         end_date: '',
       });
@@ -96,11 +95,8 @@ const BatchesPage: React.FC = () => {
     try {
       const data = {
         name: formData.name,
-        description: formData.description || undefined,
         teacher_id: formData.teacher_id ? parseInt(formData.teacher_id) : undefined,
-        schedule: formData.schedule || undefined,
-        start_date: formData.start_date ? new Date(formData.start_date).getTime() : undefined,
-        end_date: formData.end_date ? new Date(formData.end_date).getTime() : undefined,
+        time: formData.time || undefined,
       };
 
       if (editingBatch) {
@@ -179,10 +175,7 @@ const BatchesPage: React.FC = () => {
             <TableRow>
               <TableCell>Name</TableCell>
               <TableCell>Teacher</TableCell>
-              <TableCell>Schedule</TableCell>
-              <TableCell>Description</TableCell>
-              <TableCell>Start Date</TableCell>
-              <TableCell>End Date</TableCell>
+              <TableCell>Time</TableCell>
               <TableCell align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -193,14 +186,7 @@ const BatchesPage: React.FC = () => {
                   <Chip label={batch.name} color="primary" />
                 </TableCell>
                 <TableCell>{getTeacherName(batch.teacher_id)}</TableCell>
-                <TableCell>{batch.schedule || '-'}</TableCell>
-                <TableCell>{batch.description || '-'}</TableCell>
-                <TableCell>
-                  {batch.start_date ? formatDate(batch.start_date) : '-'}
-                </TableCell>
-                <TableCell>
-                  {batch.end_date ? formatDate(batch.end_date) : '-'}
-                </TableCell>
+                <TableCell>{batch.time || '-'}</TableCell>
                 <TableCell align="right">
                   <IconButton size="small" onClick={() => handleOpenDialog(batch)}>
                     <Edit />
@@ -229,15 +215,6 @@ const BatchesPage: React.FC = () => {
           />
           <TextField
             fullWidth
-            label="Description"
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            margin="normal"
-            multiline
-            rows={2}
-          />
-          <TextField
-            fullWidth
             select
             label="Teacher"
             value={formData.teacher_id}
@@ -253,29 +230,11 @@ const BatchesPage: React.FC = () => {
           </TextField>
           <TextField
             fullWidth
-            label="Schedule"
-            value={formData.schedule}
-            onChange={(e) => setFormData({ ...formData, schedule: e.target.value })}
+            label="Time"
+            value={formData.time}
+            onChange={(e) => setFormData({ ...formData, time: e.target.value })}
             margin="normal"
             placeholder="e.g., Mon-Fri 10:00 AM - 12:00 PM"
-          />
-          <TextField
-            fullWidth
-            label="Start Date"
-            type="date"
-            value={formData.start_date}
-            onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-            margin="normal"
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            fullWidth
-            label="End Date"
-            type="date"
-            value={formData.end_date}
-            onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-            margin="normal"
-            InputLabelProps={{ shrink: true }}
           />
         </DialogContent>
         <DialogActions>

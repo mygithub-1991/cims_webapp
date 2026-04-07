@@ -46,13 +46,14 @@ const ExpensesPage: React.FC = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [formData, setFormData] = useState({
-    title: '',
+    vendor_name: '',
     description: '',
     amount: '',
     category: '',
     expense_date: new Date().toISOString().split('T')[0],
     payment_method: '',
     receipt_number: '',
+    notes: '',
   });
 
   useEffect(() => {
@@ -75,24 +76,26 @@ const ExpensesPage: React.FC = () => {
     if (expense) {
       setEditingExpense(expense);
       setFormData({
-        title: expense.title,
+        vendor_name: expense.vendor_name || '',
         description: expense.description || '',
         amount: expense.amount.toString(),
         category: expense.category || '',
         expense_date: new Date(expense.expense_date).toISOString().split('T')[0],
         payment_method: expense.payment_method || '',
         receipt_number: expense.receipt_number || '',
+        notes: expense.notes || '',
       });
     } else {
       setEditingExpense(null);
       setFormData({
-        title: '',
+        vendor_name: '',
         description: '',
         amount: '',
         category: '',
         expense_date: new Date().toISOString().split('T')[0],
         payment_method: '',
         receipt_number: '',
+        notes: '',
       });
     }
     setDialogOpen(true);
@@ -106,13 +109,14 @@ const ExpensesPage: React.FC = () => {
   const handleSubmit = async () => {
     try {
       const data = {
-        title: formData.title,
+        vendor_name: formData.vendor_name || undefined,
         description: formData.description || undefined,
         amount: parseFloat(formData.amount),
         category: formData.category || undefined,
         expense_date: new Date(formData.expense_date).getTime(),
         payment_method: formData.payment_method || undefined,
         receipt_number: formData.receipt_number || undefined,
+        notes: formData.notes || undefined,
       };
 
       if (editingExpense) {
@@ -195,13 +199,14 @@ const ExpensesPage: React.FC = () => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Title</TableCell>
+              <TableCell>Vendor</TableCell>
               <TableCell>Category</TableCell>
               <TableCell>Amount</TableCell>
               <TableCell>Payment Method</TableCell>
               <TableCell>Date</TableCell>
               <TableCell>Receipt No.</TableCell>
               <TableCell>Description</TableCell>
+              <TableCell>Notes</TableCell>
               <TableCell align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -209,7 +214,7 @@ const ExpensesPage: React.FC = () => {
             {expenses.map((expense) => (
               <TableRow key={expense.id}>
                 <TableCell>
-                  <Typography fontWeight="medium">{expense.title}</Typography>
+                  <Typography fontWeight="medium">{expense.vendor_name || '-'}</Typography>
                 </TableCell>
                 <TableCell>
                   {expense.category ? (
@@ -237,6 +242,7 @@ const ExpensesPage: React.FC = () => {
                 <TableCell>{formatDate(expense.expense_date)}</TableCell>
                 <TableCell>{expense.receipt_number || '-'}</TableCell>
                 <TableCell>{expense.description || '-'}</TableCell>
+                <TableCell>{expense.notes || '-'}</TableCell>
                 <TableCell align="right">
                   <IconButton size="small" onClick={() => handleOpenDialog(expense)}>
                     <Edit />
@@ -257,11 +263,10 @@ const ExpensesPage: React.FC = () => {
         <DialogContent>
           <TextField
             fullWidth
-            label="Title"
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            label="Vendor Name"
+            value={formData.vendor_name}
+            onChange={(e) => setFormData({ ...formData, vendor_name: e.target.value })}
             margin="normal"
-            required
           />
           <TextField
             fullWidth
@@ -326,7 +331,16 @@ const ExpensesPage: React.FC = () => {
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             margin="normal"
             multiline
-            rows={3}
+            rows={2}
+          />
+          <TextField
+            fullWidth
+            label="Notes"
+            value={formData.notes}
+            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+            margin="normal"
+            multiline
+            rows={2}
           />
         </DialogContent>
         <DialogActions>

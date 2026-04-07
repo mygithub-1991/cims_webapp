@@ -35,11 +35,8 @@ export interface LoginResponse {
 export interface Teacher {
   id: number;
   name: string;
-  email?: string;
-  phone?: string;
   subject?: string;
-  qualification?: string;
-  experience_years?: number;
+  contact_number?: string;
   salary?: number;
   date_of_joining: number;
   is_deleted: boolean;
@@ -53,18 +50,21 @@ export interface Teacher {
 // Student Types
 export interface Student {
   id: number;
+  roll_number: string;
   name: string;
   batch_id?: number;
   batch?: Batch;
-  email?: string;
-  phone?: string;
+  contact_number?: string;
   parent_name?: string;
-  parent_phone?: string;
-  address?: string;
-  date_of_birth?: number;
-  date_of_joining: number;
-  monthly_fee: number;
+  parent_contact?: string;
+  total_fees: number;
   paid_fees: number;
+  payment_mode?: string;
+  installment_type?: string;
+  referred_by?: string;
+  board?: string;
+  school_id?: number;
+  date_of_joining?: number;
   is_deleted: boolean;
   created_at: number;
   updated_at: number;
@@ -77,12 +77,9 @@ export interface Student {
 export interface Batch {
   id: number;
   name: string;
-  description?: string;
+  time?: string;
   teacher_id?: number;
   teacher?: Teacher;
-  schedule?: string;
-  start_date?: number;
-  end_date?: number;
   is_deleted: boolean;
   created_at: number;
   updated_at: number;
@@ -113,10 +110,10 @@ export interface FeeRecord {
   id: number;
   student_id: number;
   student?: Student;
-  amount: number;
+  amount_paid: number;
   date: number;
   payment_method?: string;
-  receipt_number?: string;
+  receipt_id?: string;
   remarks?: string;
   is_deleted: boolean;
   created_at: number;
@@ -128,13 +125,14 @@ export interface FeeRecord {
 // Expense Types
 export interface Expense {
   id: number;
-  title: string;
+  category?: string;
   description?: string;
   amount: number;
-  category?: string;
   expense_date: number;
   payment_method?: string;
+  vendor_name?: string;
   receipt_number?: string;
+  notes?: string;
   is_deleted: boolean;
   created_at: number;
   updated_at: number;
